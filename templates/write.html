@@ -4,16 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Write — Chronicle</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
   <nav class="navbar">
     <div class="nav-container">
-      <a href="/" class="logo">Chronicle</a>
+      <a href="/" class="logo">
+        <span class="logo-icon">◆</span>
+        Chronicle
+      </a>
       <div class="nav-links">
         <a href="/">Articles</a>
         <a href="/write" class="active">Write</a>
@@ -48,7 +51,7 @@ Start with a strong hook...
 ## Conclusion
 
 Wrap up your thoughts..." required></textarea>
-        <small style="display: block; margin-top: 0.5rem; color: var(--color-text-muted); font-size: 0.75rem;">
+        <small class="form-hint">
           Markdown supported: # Heading, ## Subheading, **bold**, - list
         </small>
       </div>

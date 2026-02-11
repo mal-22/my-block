@@ -14,8 +14,11 @@ app = Flask(__name__)
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
+print("URL:", SUPABASE_URL)
+print("KEY length:", len(SUPABASE_KEY) if SUPABASE_KEY else "None")
+
 if not SUPABASE_URL or not SUPABASE_KEY:
-    raise Exception("Missing SUPABASE_URL or SUPABASE_KEY environment variables")
+    raise RuntimeError("Missing Supabase environment variables")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 

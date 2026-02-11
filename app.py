@@ -65,7 +65,7 @@ def get_all_posts():
             })
         return posts
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error fetching posts: {e}")
         return []
 
 def get_post_by_slug(slug):
@@ -78,7 +78,7 @@ def get_post_by_slug(slug):
             return post
         return None
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error fetching post: {e}")
         return None
 
 @app.route("/")
@@ -109,6 +109,7 @@ def write():
     
     return render_template("write.html")
 
+# ADD THIS DECORATOR ↓↓↓
 @app.route("/post/<slug>")
 def view_post(slug):
     post = get_post_by_slug(slug)

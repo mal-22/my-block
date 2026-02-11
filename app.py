@@ -7,6 +7,10 @@ POSTS_DIR = "posts"
 
 @app.route("/")
 def index():
+    return "Hello from Flask!"
+
+@app.route("/")
+def index():
     posts = sorted(os.listdir(POSTS_DIR), reverse=True)
     return render_template("index.html", posts=posts)
 

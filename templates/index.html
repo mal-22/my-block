@@ -44,28 +44,19 @@
     </div>
 
     <section class="posts-grid">
-        {% for post in posts %}
-        <article class="post-card">
-          <div class="post-meta-top">
-            <span class="category">Article</span>
-            <span class="read-time">5 min read</span>
-          </div>
-          <h2>{{ post.title }}</h2>
-          <p class="excerpt">{{ post.content|striptags|truncate(150) }}</p>
-          <div class="post-footer">
-            <span class="date">{{ post.date }}</span>
-            <a href="/post/{{ post.slug }}" class="read-link">
-              Read article <span class="arrow">→</span>
-            </a>
-          </div>
-        </article>
-        {% else %}
-        <div class="empty-state">
-          <h3>No posts yet</h3>
-          <p>Write your first article to get started.</p>
-          <a href="{{ url_for('write') }}" class="btn-primary">Write Post</a>
+      {% for post in posts %}
+      <article class="post-card">
+        <div class="post-meta-top">
+          <span class="category">Technology</span>
+          <span class="read-time">5 min read</span>
         </div>
-        {% endfor %}
+        {{ post.content }}
+        <div class="post-footer">
+          <span class="date">Feb 11, 2025</span>
+          <a href="#" class="read-link">Read article <span class="arrow">→</span></a>
+        </div>
+      </article>
+      {% endfor %}
     </section>
 
     <div class="load-more">

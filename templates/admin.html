@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Chronicle</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+  <style>
+    .admin-table { width: 100%; border-collapse: collapse; margin-top: 2rem; }
+    .admin-table th, .admin-table td { 
+      padding: 1rem; 
+      text-align: left; 
+      border-bottom: 1px solid var(--color-border);
+    }
+    .admin-table th { 
+      font-weight: 600; 
+      color: var(--color-text-secondary);
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .admin-table td { font-size: 0.9375rem; }
+    .btn-danger { 
+      background: #dc2626; 
+      color: white; 
+      border: none; 
+      padding: 0.5rem 1rem; 
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .btn-danger:hover { background: #b91c1c; }
+    .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+    .badge { 
+      background: var(--color-accent); 
+      color: white; 
+      padding: 0.25rem 0.75rem; 
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/" class="logo">
+        <span class="logo-icon">◆</span>
+        Chronicle
+      </a>
+      <div class="nav-links">
+        <a href="/">Articles</a>
+        <a href="/write">Write</a>
+        <a href="/admin" class="active">Admin</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="admin-header">
+      <div>
+        <h1>Admin Dashboard</h1>
+        <p style="color: var(--color-text-secondary); margin-top: 0.5rem;">Manage your blog posts</p>
+      </div>
+      <span class="badge">{{ posts|length }} Posts</span>
+    </div>
+
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Filename</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for post in posts %}
+        <tr>
+          <td>
+            <strong>{{ post.title }}</strong>
+          </td>
+          <td>
+            <code style="background: var(--color-elevated); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.875rem;">{{ post.filename }}</code>
+          </td>
+          <td>{{ post.date }}</td>
+          <td>
+            <a href="{{ url_for('view_post', filename=post.filename) }}" style="color: var(--color-accent); text-decoration: none; margin-right: 1rem;">View</a>
+            <form method="POST" action="{{ url_for('delete_post', filename=post.filename) }}" style="display: inline;" onsubmit="return confirm('Delete this post?');">
+              <button type="submit" class="btn-danger">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {%

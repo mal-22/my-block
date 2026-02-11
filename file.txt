@@ -1,0 +1,8 @@
+online server host: https://dashboard.render.com/web/srv-d65scgh5pdvs73e1f0n0/logs?r=live
+data storage: https://supabase.com/dashboard/project/zrckoammnhpjeoygnaec
+back end coding: https://github.com/mal-22
+- git add .
+- git commit -m "what has change"
+- git push
+personal domain tunnel: https://www.cloudflare.com/en-au/
+

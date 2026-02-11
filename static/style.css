@@ -659,3 +659,24 @@ body {
 .empty-state p {
   margin-bottom: 1.5rem;
 }
+
+/* Delete Post Button */
+.btn-delete {
+  background-color: #e74c3c; /* red */
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  margin-top: 1.5rem;
+  transition: var(--transition);
+  font-family: var(--font-sans);
+}
+
+.btn-delete:hover {
+  background-color: #c0392b; /* darker red on hover */
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+

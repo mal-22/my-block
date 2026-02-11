@@ -660,23 +660,26 @@ body {
   margin-bottom: 1.5rem;
 }
 
-/* Delete Post Button */
+/* Delete Post Button - subtle warning */
 .btn-delete {
-  background-color: #e74c3c; /* red */
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
+  background-color: var(--color-elevated); /* matches surface tone */
+  color: #b91c1c; /* soft red text */
+  border: 1px solid #fca5a5; /* light red border */
+  padding: 0.5rem 1rem;
   cursor: pointer;
   border-radius: var(--radius-md);
   font-weight: 600;
-  margin-top: 1.5rem;
+  font-size: 0.875rem;
   transition: var(--transition);
   font-family: var(--font-sans);
 }
 
 .btn-delete:hover {
-  background-color: #c0392b; /* darker red on hover */
+  background-color: #fee2e2; /* very light red */
+  border-color: #f87171; /* slightly darker border */
+  color: #991b1b; /* darker red on hover */
   transform: translateY(-1px);
   box-shadow: var(--shadow-sm);
 }
+
 

@@ -1,19 +1,76 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Write a post</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Write — Chronicle</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-<h1>Write a new post</h1>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/" class="logo">Chronicle</a>
+      <div class="nav-links">
+        <a href="/">Articles</a>
+        <a href="/write" class="active">Write</a>
+        <a href="#about">About</a>
+      </div>
+    </div>
+  </nav>
 
-<form method="POST">
-  <input type="text" name="title" placeholder="Post title" required>
-  <textarea name="content" rows="15" placeholder="Write in Markdown..." required></textarea>
-  <button type="submit">Publish</button>
-</form>
+  <main class="write-container">
+    <div class="write-header">
+      <h1>Compose Article</h1>
+      <p class="hero-subtitle">Share your perspective with clarity and purpose.</p>
+    </div>
+
+    <form method="POST" action="/write" class="write-form">
+      <div class="form-group">
+        <label for="title">Headline</label>
+        <input type="text" id="title" name="title" placeholder="Enter a compelling title..." required>
+      </div>
+      
+      <div class="form-group">
+        <label for="content">Content</label>
+        <textarea id="content" name="content" placeholder="# Introduction
+
+Start with a strong hook...
+
+## Key Points
+
+- Point one
+- Point two
+
+## Conclusion
+
+Wrap up your thoughts..." required></textarea>
+        <small style="display: block; margin-top: 0.5rem; color: var(--color-text-muted); font-size: 0.75rem;">
+          Markdown supported: # Heading, ## Subheading, **bold**, - list
+        </small>
+      </div>
+      
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">Publish Article</button>
+        <a href="/" class="btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <h3>Chronicle</h3>
+        <p>Independent writing on the ideas that matter.</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2025 Chronicle. All rights reserved.</p>
+    </div>
+  </footer>
 
 </body>
 </html>
-

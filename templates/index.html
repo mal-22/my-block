@@ -3,42 +3,80 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Blog</title>
+  <title>Chronicle — Modern Perspectives</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 </head>
 <body>
 
-  <header>
-    <h1>My Blog</h1>
-    <p>Thoughts, stories & ideas</p>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/" class="logo">Chronicle</a>
+      <div class="nav-links">
+        <a href="/" class="active">Articles</a>
+        <a href="/write">Write</a>
+        <a href="#about">About</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-content">
+      <span class="tagline">Curated Perspectives</span>
+      <h1>Ideas that shape the conversation</h1>
+      <p class="hero-subtitle">Thoughtful writing on technology, culture, and the future.</p>
+    </div>
   </header>
 
-<main class="container">
-  <section class="posts">
-    <article class="post-card">
-      <h2>My First Blog Post</h2>
-      <p class="meta">Feb 11, 2026 · 3 min read</p>
-      <p class="excerpt">
-        This is my first blog post. I’m building this blog using bash and Cloudflare Tunnel.
-      </p>
-      <a href="posts/first-post.html">Read more →</a>
-    </article>
+  <main class="container">
+    <div class="posts-header">
+      <h2>Latest Stories</h2>
+      <div class="filter-tabs">
+        <button class="tab active">All</button>
+        <button class="tab">Technology</button>
+        <button class="tab">Culture</button>
+      </div>
+    </div>
 
-    <article class="post-card">
-      <h2>Why I Started Blogging</h2>
-      <p class="meta">Feb 10, 2026 · 2 min read</p>
-      <p class="excerpt">
-        Blogging helps me think clearly and share ideas with the world.
-      </p>
-      <a href="posts/why-blog.html">Read more →</a>
-    </article>
-  </section>
-</main>
+    <section class="posts-grid">
+      {% for post in posts %}
+      <article class="post-card">
+        <div class="post-meta-top">
+          <span class="category">Technology</span>
+          <span class="read-time">5 min read</span>
+        </div>
+        {{ post.content }}
+        <div class="post-footer">
+          <span class="date">Feb 11, 2025</span>
+          <a href="#" class="read-link">Read article <span class="arrow">→</span></a>
+        </div>
+      </article>
+      {% endfor %}
+    </section>
 
-  <footer>
-    <p>© 2026 My Blog. All rights reserved.</p>
+    <div class="load-more">
+      <button class="btn-secondary">Load more articles</button>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <h3>Chronicle</h3>
+        <p>Independent writing on the ideas that matter.</p>
+      </div>
+      <div class="footer-links">
+        <a href="#">Twitter</a>
+        <a href="#">GitHub</a>
+        <a href="#">RSS</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2025 Chronicle. All rights reserved.</p>
+    </div>
   </footer>
 
 </body>
 </html>
-

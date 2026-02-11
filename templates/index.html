@@ -54,7 +54,7 @@
           <p class="excerpt">{{ post.content|striptags|truncate(150) }}</p>
           <div class="post-footer">
             <span class="date">{{ post.date }}</span>
-            <a href="{{ url_for('view_post', slug=post.slug) }}" class="read-link">
+            <a href="/post/{{ post.slug }}" class="read-link">
               Read article <span class="arrow">→</span>
             </a>
           </div>

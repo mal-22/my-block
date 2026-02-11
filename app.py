@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect, Markup, abort
+from flask import Flask, render_template, request, redirect, abort
+from markupsafe import Markup
 from datetime import datetime
 import os
 import re

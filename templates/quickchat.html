@@ -574,87 +574,92 @@
     </style>
 </head>
 <body>
-
+    
 <nav class="navbar">
-    <div class="nav-container">
-        <a href="/" class="logo">
-            <span class="logo-icon">⚡</span>
-            Chronicle
-        </a>
-        <div class="nav-links">
-            <a href="/">Home</a>
-            <a href="/quickchat" class="active">FlashChat</a>
-            <a href="/chat/logout">Logout</a>
-        </div>
+  <div class="nav-container">
+    <button class="mobile-toggle" onclick="toggleSidebar()">☰</button>
+    <a href="/" class="logo">Chronicle</a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/quickchat" class="active">QuickChat</a>
+      <a href="/chat/logout">Logout</a>
     </div>
+  </div>
 </nav>
 
+<!-- Single Messenger-style layout -->
 <div class="chat-app">
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-brand">
-                <span>⚡</span>
-                FlashChat
-            </div>
-        </div>
-        
-        <div class="search-bar">
-            <input type="text" class="search-input" placeholder="Search chats..." id="searchInput">
-        </div>
-        
-        <div class="section-label">Active Conversations</div>
-        
-        <div class="contact-list" id="contactList">
-            <!-- Contacts rendered here -->
-        </div>
+  <!-- Sidebar: conversations list -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <span>⚡</span>
+        QuickChat
+      </div>
     </div>
-    
-    <!-- Chat Main -->
-    <div class="chat-main">
-        <!-- Empty State -->
-        <div class="empty-state" id="emptyState">
-            <div class="empty-icon">💬</div>
-            <div class="empty-text">Select a chat to start messaging</div>
-        </div>
-        
-        <!-- Chat View -->
-        <div class="chat-view hidden" id="chatView">
-            <div class="chat-header">
-                <div class="chat-header-user">
-                    <div class="header-avatar" id="chatAvatar">U</div>
-                    <div class="header-info">
-                        <div class="header-name" id="chatName">User</div>
-                        <div class="header-status">
-                            <span class="pulse-dot"></span>
-                            Online
-                        </div>
-                    </div>
-                </div>
-                <div class="chat-actions">
-                    <button class="icon-btn" title="Info">ℹ️</button>
-                </div>
-            </div>
-            
-            <div class="messages-area" id="messagesArea">
-                <!-- Messages rendered here -->
-            </div>
-            
-            <div class="input-area">
-                <input 
-                    type="text" 
-                    class="input-field" 
-                    placeholder="Type a message... (disappears in 30s)"
-                    id="messageInput"
-                    onkeypress="handleKeyPress(event)"
-                >
-                <button class="btn-send" onclick="sendMessage()">
-                    ➤
-                </button>
-            </div>
-        </div>
+
+    <div class="search-bar">
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Search chats..."
+        id="searchInput"
+      >
     </div>
+
+    <div class="section-label">Active Conversations</div>
+
+    <div class="contact-list" id="contactList">
+      <!-- Contacts rendered here by JS -->
+    </div>
+  </aside>
+
+  <!-- Main chat pane -->
+  <main class="chat-main" id="chatMain">
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">💬</div>
+      <div class="empty-text">Select a chat to start messaging</div>
+    </div>
+
+    <!-- Chat View -->
+    <div class="chat-view hidden" id="chatView">
+      <div class="chat-header">
+        <div class="chat-header-user">
+          <div class="header-avatar" id="chatAvatar">U</div>
+          <div class="header-info">
+            <div class="header-name" id="chatName">User</div>
+            <div class="header-status">
+              <span class="pulse-dot"></span>
+              Online
+            </div>
+          </div>
+        </div>
+        <div class="chat-actions">
+          <button class="icon-btn" title="Info">ℹ️</button>
+        </div>
+      </div>
+
+      <div class="messages-area" id="messagesArea">
+        <!-- Messages rendered here by JS -->
+      </div>
+
+      <div class="input-area">
+        <input
+          type="text"
+          class="input-field"
+          placeholder="Type a message... (disappears in 30s)"
+          id="messageInput"
+          onkeypress="handleKeyPress(event)"
+        >
+        <button class="btn-send" onclick="sendMessage()">
+          ➤
+        </button>
+      </div>
+    </div>
+  </main>
 </div>
+
 
 <!-- Debug Panel (optional) -->
 <div class="debug-panel" id="debugPanel">

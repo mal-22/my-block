@@ -1126,6 +1126,26 @@
           }
           lastTouchEnd = now;
       }, false);
+      // Mobile touch optimizations
+      document.addEventListener('touchstart', function() {}, {passive: true});
+
+      // Prevent double-tap zoom
+      let lastTouchEnd = 0;
+      document.addEventListener('touchend', function(e) {
+          const now = Date.now();
+          if (now - lastTouchEnd <= 300) {
+              e.preventDefault();
+          }
+          lastTouchEnd = now;
+      }, false);
+
+      // Fix viewport height on mobile (address bar issue)
+      function setVH() {
+          let vh = window.innerHeight * 0.01;
+          document.documentElement.style.setProperty('--vh', `${vh}px`);
+      }
+      window.addEventListener('resize', setVH);
+      setVH();
   </script>
 
 </body>

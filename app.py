@@ -93,6 +93,15 @@ def get_current_chat_user():
         "username": user["name"],
         "online": user["online"]
     })
+    
+@app.route('/api/test-supabase')
+def test_supabase():
+    try:
+        # Test profiles table
+        resp = supabase.table("profiles").select("count").execute()
+        return {"status": "ok", "data": resp.data}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}, 500
 
 
 @app.route('/api/chat/users')

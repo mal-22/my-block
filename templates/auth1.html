@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlashChat - Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            background: #0a0a0f;
+            color: #f0eeff;
+            font-family: 'Outfit', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .auth-container {
+            background: #111118;
+            border: 1px solid #2a2a38;
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .auth-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #7c6bff, #ff6b9d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .auth-subtitle {
+            color: #8b8aa8;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .auth-input {
+            background: #18181f;
+            border: 1px solid #2a2a38;
+            border-radius: 10px;
+            padding: 14px 16px;
+            color: #f0eeff;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .auth-input:focus {
+            border-color: #7c6bff;
+        }
+        .auth-btn {
+            background: linear-gradient(135deg, #7c6bff, #9b6bff);
+            border: none;
+            border-radius: 10px;
+            padding: 14px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .auth-btn:hover {
+            transform: scale(1.02);
+        }
+        .auth-note {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #55546a;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-title">⚡ FlashChat</div>
+        <div class="auth-subtitle">Enter your username to start chatting</div>
+        
+        <form class="auth-form" action="/auth" method="POST">
+            <input type="text" name="username" class="auth-input" placeholder="Your username" required autocomplete="off">
+            <button type="submit" class="auth-btn">Start Chatting</button>
+        </form>
+        
+        <div class="auth-note">No password needed • Messages vanish in 30s</div>
+    </div>
+</body>
+</html>

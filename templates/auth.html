@@ -3,91 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FlashChat - Login</title>
+    <title>FlashChat - Chronicle</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <style>
-        body {
-            background: #0a0a0f;
-            color: #f0eeff;
-            font-family: 'Outfit', sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .auth-container {
-            background: #111118;
-            border: 1px solid #2a2a38;
-            border-radius: 16px;
-            padding: 40px;
-            width: 100%;
+        .chat-container {
             max-width: 400px;
+            margin: 80px auto;
+            padding: 40px;
+            background: #1a1a2e;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
             text-align: center;
         }
-        .auth-title {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            background: linear-gradient(135deg, #7c6bff, #ff6b9d);
+        
+        .chat-logo {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+        
+        .chat-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #6366f1, #f472b6);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
         }
-        .auth-subtitle {
-            color: #8b8aa8;
-            font-size: 14px;
+        
+        .chat-subtitle {
+            color: #94a3b8;
             margin-bottom: 30px;
+            font-size: 0.95rem;
         }
-        .auth-form {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-        .auth-input {
-            background: #18181f;
-            border: 1px solid #2a2a38;
-            border-radius: 10px;
-            padding: 14px 16px;
-            color: #f0eeff;
-            font-size: 16px;
-            outline: none;
+        
+        .chat-input {
+            width: 100%;
+            padding: 14px 18px;
+            background: #0f0f23;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            font-family: 'Inter', sans-serif;
             transition: border-color 0.2s;
         }
-        .auth-input:focus {
-            border-color: #7c6bff;
+        
+        .chat-input::placeholder {
+            color: #64748b;
         }
-        .auth-btn {
-            background: linear-gradient(135deg, #7c6bff, #9b6bff);
-            border: none;
-            border-radius: 10px;
+        
+        .chat-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: #0f0f23;
+        }
+        
+        .chat-btn {
+            width: 100%;
             padding: 14px;
-            color: white;
-            font-size: 16px;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            border: none;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+            margin-bottom: 15px;
         }
-        .auth-btn:hover {
-            transform: scale(1.02);
+        
+        .chat-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
         }
-        .auth-note {
-            margin-top: 20px;
-            font-size: 12px;
-            color: #55546a;
+        
+        .chat-btn.secondary {
+            background: transparent;
+            border: 2px solid rgba(255,255,255,0.2);
+            color: #e2e8f0;
+        }
+        
+        .chat-btn.secondary:hover {
+            background: rgba(255,255,255,0.05);
+            border-color: #6366f1;
+        }
+        
+        .flash-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #f87171;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .toggle-mode {
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+        
+        .toggle-mode a {
+            color: #6366f1;
+            cursor: pointer;
+            text-decoration: underline;
+            font-weight: 600;
+        }
+        
+        .toggle-mode a:hover {
+            color: #818cf8;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 25px;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        
+        .back-link:hover {
+            color: #6366f1;
         }
     </style>
 </head>
 <body>
-    <div class="auth-container">
-        <div class="auth-title">⚡ FlashChat</div>
-        <div class="auth-subtitle">Enter your username to start chatting</div>
-        
-        <form class="auth-form" action="/auth" method="POST">
-            <input type="text" name="username" class="auth-input" placeholder="Your username" required autocomplete="off">
-            <button type="submit" class="auth-btn">Start Chatting</button>
-        </form>
-        
-        <div class="auth-note">No password needed • Messages vanish in 30s</div>
+
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/" class="logo">
+        <span class="logo-icon">◆</span>
+        Chronicle
+      </a>
     </div>
+  </nav>
+
+  <div class="chat-container">
+      <div class="chat-logo">⚡</div>
+      <div class="chat-title">FlashChat</div>
+      <div class="chat-subtitle" id="modeSubtitle">Create an account to start chatting</div>
+      
+      {% with messages = get_flashed_messages() %}
+          {% if messages %}
+              {% for message in messages %}
+                  <div class="flash-message">{{ message }}</div>
+              {% endfor %}
+          {% endif %}
+      {% endwith %}
+      
+      <form method="POST" id="authForm" action="/auth">
+          <input type="hidden" name="is_login" id="isLogin" value="false">
+          <input type="text" name="username" class="chat-input" placeholder="Username" required maxlength="20">
+          <input type="password" name="password" class="chat-input" placeholder="Password" required>
+          <button type="submit" class="chat-btn" id="submitBtn">Sign Up</button>
+      </form>
+      
+      <div class="toggle-mode">
+          <span id="toggleText">Already have an account?</span>
+          <a onclick="toggleMode()" id="toggleLink">Login</a>
+      </div>
+      
+      <a href="/" class="back-link">← Return to Chronicle</a>
+  </div>
+
+  <script>
+    let isLoginMode = false;
+    
+    function toggleMode() {
+        isLoginMode = !isLoginMode;
+        const isLoginInput = document.getElementById('isLogin');
+        const submitBtn = document.getElementById('submitBtn');
+        const modeSubtitle = document.getElementById('modeSubtitle');
+        const toggleText = document.getElementById('toggleText');
+        const toggleLink = document.getElementById('toggleLink');
+        
+        if (isLoginMode) {
+            isLoginInput.value = 'true';
+            submitBtn.textContent = 'Login';
+            modeSubtitle.textContent = 'Welcome back! Login to continue';
+            toggleText.textContent = "Don't have an account?";
+            toggleLink.textContent = 'Sign Up';
+        } else {
+            isLoginInput.value = 'false';
+            submitBtn.textContent = 'Sign Up';
+            modeSubtitle.textContent = 'Create an account to start chatting';
+            toggleText.textContent = 'Already have an account?';
+            toggleLink.textContent = 'Login';
+        }
+    }
+  </script>
+
 </body>
 </html>
+

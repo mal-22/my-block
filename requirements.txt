@@ -1,5 +1,5 @@
-gotrue-py==2.0.0
 Flask==3.0.0
 supabase==2.3.0
 markupsafe==2.1.3
 flask-cors==4.0.0
+gotrue==2.8.1

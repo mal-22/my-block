@@ -153,6 +153,76 @@ html, body {
     font-size: 10px;
   }
 }
+/* Mobile: switch to single-column layout */
+@media (max-width: 768px) {
+  /* Allow vertical scrolling */
+  html, body {
+    height: 100%;
+    overflow: auto;
+  }
+
+  .chat-app {
+    flex-direction: column;
+    height: auto;
+    min-height: calc(100vh - 50px);
+  }
+
+  /* Sidebar turns into a header list */
+  .sidebar {
+    width: 100%;
+    max-height: 220px;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .contact-list {
+    max-height: 150px;
+  }
+
+  /* Chat takes full width and height below sidebar */
+  .chat-main {
+    width: 100%;
+    height: calc(100vh - 50px - 220px);
+  }
+
+  .messages-area {
+    padding: 12px;
+    max-height: calc(100vh - 50px - 220px - 60px - 60px); /* header + input */
+  }
+
+  .msg-bubble {
+    max-width: 100%;
+    font-size: 12px;
+  }
+
+  /* Shrink debug panel so it doesn't cover everything */
+  .debug-panel {
+    max-width: 180px;
+    max-height: 90px;
+    font-size: 9px;
+    bottom: 4px;
+    right: 4px;
+  }
+}
+
+/* Extra small phones: even tighter */
+@media (max-width: 480px) {
+  .sidebar {
+    max-height: 190px;
+  }
+
+  .contact-list {
+    max-height: 130px;
+  }
+
+  .chat-main {
+    height: calc(100vh - 50px - 190px);
+  }
+
+  .nav-links a {
+    font-size: 0.75rem;
+  }
+}
 
 
 html {

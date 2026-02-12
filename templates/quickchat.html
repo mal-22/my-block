@@ -1090,6 +1090,42 @@
           div.textContent = text;
           return div.innerHTML;
       }
+      // Mobile detection and handling
+      const isMobile = window.matchMedia("(max-width: 768px)").matches;
+
+      if (isMobile) {
+          debug('Mobile mode detected');
+          
+          // Auto-focus input when chat opens (mobile keyboards)
+          const originalStartChat = startChat;
+          startChat = function(user, serverChatId) {
+              originalStartChat(user, serverChatId);
+              // Delay focus to allow transition
+              setTimeout(() => {
+                  const input = document.getElementById('messageInput');
+                  if (input) input.focus();
+              }, 300);
+          };
+          
+          // Handle viewport resize (mobile keyboard appearing)
+          window.addEventListener('resize', () => {
+              if (currentChatId) {
+                  // Scroll to bottom when keyboard opens/closes
+                  const area = document.getElementById('messagesArea');
+                  if (area) area.scrollTop = area.scrollHeight;
+              }
+          });
+      }
+
+      // Prevent zoom on double-tap (iOS)
+      let lastTouchEnd = 0;
+      document.addEventListener('touchend', (e) => {
+          const now = Date.now();
+          if (now - lastTouchEnd <= 300) {
+              e.preventDefault();
+          }
+          lastTouchEnd = now;
+      }, false);
   </script>
 
 </body>

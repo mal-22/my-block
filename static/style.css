@@ -716,3 +716,189 @@ body {
 }
 
 
+/* ============================================
+   MOBILE RESPONSIVE STYLES
+   ============================================ */
+
+/* Tablet and smaller */
+@media (max-width: 768px) {
+    .chat-app {
+        flex-direction: column;
+    }
+    
+    /* Sidebar becomes a top bar on mobile */
+    .sidebar {
+        width: 100%;
+        height: auto;
+        max-height: 40vh;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .contact-list {
+        max-height: 200px;
+        display: flex;
+        overflow-x: auto;
+        overflow-y: hidden;
+        gap: 8px;
+        padding: 8px;
+    }
+    
+    /* Horizontal scrolling user cards */
+    .contact-item {
+        flex-direction: column;
+        min-width: 70px;
+        padding: 8px;
+        text-align: center;
+        margin-bottom: 0;
+    }
+    
+    .c-avatar {
+        width: 48px;
+        height: 48px;
+        font-size: 24px;
+    }
+    
+    .c-info {
+        display: none; /* Hide text on mobile, show avatar only */
+    }
+    
+    .c-meta {
+        position: absolute;
+        top: 0;
+        right: 0;
+    }
+    
+    /* Show name below avatar for active/has-request */
+    .contact-item.active .c-info,
+    .contact-item[data-has-request="true"] .c-info {
+        display: block;
+        position: absolute;
+        bottom: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--surface);
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 10px;
+        white-space: nowrap;
+        z-index: 10;
+    }
+    
+    .section-label,
+    .search-bar,
+    .sidebar-header,
+    .sidebar-footer {
+        display: none; /* Hide on mobile to save space */
+    }
+    
+    /* Chat area takes remaining space */
+    .chat-area {
+        height: calc(60vh - 50px);
+    }
+    
+    /* Larger touch targets */
+    .request-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+    }
+    
+    .send-btn {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .chat-input {
+        font-size: 16px; /* Prevents zoom on iOS */
+        padding: 12px 16px;
+    }
+    
+    /* Messages */
+    .msg-group {
+        max-width: 85%;
+    }
+    
+    .msg-bubble {
+        font-size: 15px;
+        padding: 12px 16px;
+    }
+    
+    /* Modal adjustments */
+    .modal-content {
+        margin: 20px;
+        max-width: calc(100% - 40px);
+    }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+    .navbar {
+        height: 44px;
+        padding: 0 12px;
+    }
+    
+    .nav-links {
+        gap: 12px;
+    }
+    
+    .nav-links a {
+        font-size: 12px;
+    }
+    
+    .logo {
+        font-size: 14px;
+    }
+    
+    .chat-header {
+        padding: 10px 15px;
+    }
+    
+    .chat-header-avatar {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .messages {
+        padding: 15px;
+    }
+    
+    .input-bar {
+        padding: 10px 15px;
+    }
+    
+    /* Make timer more visible */
+    .msg-countdown {
+        font-size: 11px;
+        padding: 2px 8px;
+    }
+}
+
+/* Landscape mode on mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+    .sidebar {
+        max-height: 30vh;
+    }
+    
+    .chat-area {
+        height: calc(70vh - 50px);
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .contact-item:hover {
+        background: transparent; /* Remove hover on touch */
+    }
+    
+    .contact-item:active {
+        background: var(--surface2);
+    }
+    
+    /* Larger touch targets */
+    .send-btn,
+    .request-btn {
+        min-height: 44px;
+        min-width: 44px;
+    }
+}

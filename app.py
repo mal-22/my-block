@@ -5,19 +5,13 @@ import os
 import re
 import time
 from supabase import create_client, Client
-from datetime import datetime, timezone  # Add this import at the top
+from datetime import datetime, timezone
 import uuid
+from flask_cors import CORS
+
 # ==============================
 # Supabase Configuration
 # ==============================
-#SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://zrckoammnhpjeoygnaec.supabase.co")
-#SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "YOUR_SUPABASE_KEY_HERE")
-#
-#if not SUPABASE_URL or not SUPABASE_KEY:
-#    raise RuntimeError("Missing Supabase environment variables")
-#
-#supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
@@ -28,16 +22,26 @@ if not SUPABASE_URL or not SUPABASE_KEY:
     raise RuntimeError("Missing Supabase environment variables")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 # ==============================
 # Flask App Config
 # ==============================
 app = Flask(__name__)
+
+# FIX: Proper session configuration for production
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "supersecretkey")
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
+app.config['SESSION_COOKIE_SECURE'] = True  # Enable for HTTPS (Render uses HTTPS)
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Important for cross-site requests
+app.config['SESSION_COOKIE_NAME'] = 'chronicle_session'
+
+# FIX: Enable CORS if needed
+CORS(app, supports_credentials=True, origins=["*"])
 
 from flask import flash
 
-@app.route('/auth', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def auth():
     if request.method == 'POST':
         username = request.form.get("username")
@@ -52,7 +56,6 @@ def auth():
 
             if not resp.data or len(resp.data) == 0:
                 # User does not exist → create new user
-                # Use timezone-aware datetime
                 new_user = supabase.table("profiles").insert({
                     "name": username,
                     "online": True,
@@ -69,18 +72,19 @@ def auth():
 
             # ✅ Set session for current user
             session.clear()
+            session.permanent = True  # FIX: Make session permanent
             session['user'] = user_id
-            session['username'] = username  # FIX: Store username for later use
-
+            session['username'] = username
+            
             print(f"Logged in as {username}, session user ID set to {user_id}")
             return redirect("/quickchat")
 
         except Exception as e:
             print("Error during login/signup:", e)
-            return f"Login/signup error: {str(e)}", 500  # Better error visibility
+            return f"Login/signup error: {str(e)}", 500
 
     # GET request → render login/signup form
-    return render_template("auth.html")
+    return render_template("login.html")
 
 
 @app.route('/api/chat/user')
@@ -119,6 +123,7 @@ def diagnose():
     
     results = {
         "environment": {},
+        "session": {},
         "supabase_test": None,
         "error": None
     }
@@ -131,6 +136,13 @@ def diagnose():
         "SUPABASE_URL": supabase_url[:30] + "..." if supabase_url != "NOT SET" else "NOT SET",
         "SUPABASE_KEY": "SET (length: " + str(len(supabase_key)) + ")" if supabase_key != "NOT SET" else "NOT SET",
         "FLASK_SECRET_KEY": "SET" if os.environ.get("FLASK_SECRET_KEY") else "NOT SET"
+    }
+    
+    # Check session
+    results["session"] = {
+        "has_user": "user" in session,
+        "user_id": session.get("user", "NOT SET"),
+        "username": session.get("username", "NOT SET")
     }
     
     # Test Supabase connection
@@ -147,16 +159,19 @@ def diagnose():
             "error": str(e)
         }
     
-    return results
+    return jsonify(results)
 
 
 @app.route('/api/chat/users')
 def get_chat_users():
+    # FIX: Better session checking with logging
     if 'user' not in session:
+        print("WARNING: No user in session at /api/chat/users")
+        print(f"Session contents: {dict(session)}")
         return jsonify({'error': 'Not authenticated'}), 401
 
     current_id = session['user']
-    print("Current user:", current_id)
+    print(f"[get_chat_users] Current user: {current_id}")
 
     try:
         # Fetch all users except self
@@ -179,6 +194,7 @@ def get_chat_users():
                 .execute()
             pending_requests = {r['from_user']: r for r in (requests_resp.data or [])}
         except Exception as e:
+            print(f"Error fetching pending requests: {e}")
             pending_requests = {}
 
         # Fetch requests FROM current user
@@ -190,9 +206,10 @@ def get_chat_users():
                 .execute()
             sent_requests = {r['to_user']: r for r in (sent_resp.data or [])}
         except Exception as e:
+            print(f"Error fetching sent requests: {e}")
             sent_requests = {}
 
-        # FIX: Fetch active chats with the ACTUAL chat_id
+        # Fetch active chats
         try:
             active_resp = supabase.table("active_chats") \
                 .select("*") \
@@ -200,13 +217,13 @@ def get_chat_users():
                 .eq("status", "active") \
                 .execute()
             active_chats = active_resp.data or []
-            print("Active chats found:", active_chats)
+            print(f"[get_chat_users] Active chats found: {len(active_chats)}")
         except Exception as e:
-            print("Error fetching active chats:", e)
+            print(f"Error fetching active chats: {e}")
             active_chats = []
 
         # Build lookup: other_user_id -> chat_id
-        active_chat_map = {}  # {other_user_id: chat_id}
+        active_chat_map = {}
         for chat in active_chats:
             chat_id = chat['id']
             participants = chat.get('participants', [])
@@ -224,14 +241,14 @@ def get_chat_users():
                 'has_request': user_id in pending_requests,
                 'request_sent': user_id in sent_requests,
                 'chat_active': user_id in active_chat_map,
-                'chat_id': active_chat_map.get(user_id)  # FIX: Include actual chat_id
+                'chat_id': active_chat_map.get(user_id)
             })
 
-        print("User list with chat_ids:", user_list)
+        print(f"[get_chat_users] Returning {len(user_list)} users")
         return jsonify(user_list)
 
     except Exception as e:
-        print("Error in get_chat_users:", e)
+        print(f"Error in get_chat_users: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
@@ -257,27 +274,37 @@ def send_chat_request():
         }).execute()
         return jsonify({'success': True})
     except Exception as e:
-        print("Error sending request:", e)
+        print(f"Error sending request: {e}")
         return jsonify({'error': str(e)}), 500
 
 
 @app.route("/api/chat/messages/<chat_id>")
 def api_chat_messages(chat_id):
+    # FIX: Better session checking
     if "user" not in session:
+        print(f"WARNING: Unauthorized access to /api/chat/messages/{chat_id}")
+        print(f"Session contents: {dict(session)}")
         return jsonify({"error": "Unauthorized"}), 401
-        
+    
+    print(f"[api_chat_messages] User {session['user']} fetching messages for chat: {chat_id}")
+    
     try:
-        # FIX: Delete expired messages first (cleanup on every fetch)
-        cutoff = datetime.now(timezone.utc) - timedelta(seconds=30)
+        # FIX: Use UTC consistently
+        now = datetime.now(timezone.utc)
+        cutoff = now - timedelta(seconds=30)
+        
+        # Delete expired messages first
         try:
-            supabase.table("messages") \
+            delete_resp = supabase.table("messages") \
                 .delete() \
+                .eq("chat_id", chat_id) \
                 .lt("created_at", cutoff.isoformat()) \
                 .execute()
+            print(f"[api_chat_messages] Cleaned up expired messages")
         except Exception as e:
-            print("Cleanup error (non-critical):", e)
+            print(f"Cleanup error (non-critical): {e}")
         
-        # Now fetch remaining messages
+        # Fetch remaining messages
         resp = supabase.table("messages") \
             .select("*") \
             .eq("chat_id", chat_id) \
@@ -286,21 +313,33 @@ def api_chat_messages(chat_id):
             .execute()
             
         messages = resp.data or []
+        print(f"[api_chat_messages] Found {len(messages)} messages")
         
-        # Calculate seconds_left
+        # Calculate seconds_left for each message
         for m in messages:
             try:
-                created_str = m.get("created_at", "").replace('Z', '+00:00')
+                created_str = m.get("created_at", "")
+                # Handle both 'Z' and '+00:00' timezone formats
+                if created_str.endswith('Z'):
+                    created_str = created_str[:-1] + '+00:00'
+                elif not ('+' in created_str or '-' in created_str[-6:]):
+                    created_str += '+00:00'
+                    
                 created_time = datetime.fromisoformat(created_str)
-                elapsed = (datetime.now(timezone.utc) - created_time).total_seconds()
-                m["seconds_left"] = max(0, 30 - int(elapsed))
+                elapsed = (now - created_time).total_seconds()
+                m["seconds_left"] = max(0, int(30 - elapsed))
+                m["timestamp"] = m["created_at"]  # Add timestamp field for frontend
             except Exception as e:
+                print(f"Error calculating seconds_left for message: {e}")
                 m["seconds_left"] = 0
+                m["timestamp"] = m.get("created_at", "")
                 
         return jsonify(messages)
         
     except Exception as e:
-        print("Error fetching messages:", e)
+        print(f"Error fetching messages: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify([]), 500
 
 @app.route('/api/chat/request/accept', methods=['POST'])
@@ -332,7 +371,6 @@ def accept_chat_request():
 
         print(f"Chat created: {chat_id} between {from_user} and {to_user}")
         
-        # Return the chat_id so frontend can use it
         return jsonify({
             'success': True,
             'chat_id': chat_id,
@@ -340,13 +378,16 @@ def accept_chat_request():
         })
         
     except Exception as e:
-        print("Error accepting request:", e)
+        print(f"Error accepting request: {e}")
         return jsonify({'error': str(e)}), 500
 
 
 @app.route("/api/chat/send", methods=["POST"])
 def api_chat_send():
+    # FIX: Better session checking
     if "user" not in session:
+        print("WARNING: Unauthorized send attempt")
+        print(f"Session contents: {dict(session)}")
         return jsonify({"error": "Unauthorized"}), 401
     
     data = request.get_json()
@@ -354,20 +395,22 @@ def api_chat_send():
     # DEBUG: Print what we received
     print(f"=== SEND MESSAGE DEBUG ===")
     print(f"Session user: {session.get('user')}")
+    print(f"Session username: {session.get('username')}")
     print(f"Request JSON: {data}")
-    print(f"Headers: {dict(request.headers)}")
     
     chat_id = data.get("chat_id")
     text = data.get("text")
     
     if not chat_id:
+        print("ERROR: Missing chat_id")
         return jsonify({"error": "Missing chat_id"}), 400
     if not text:
+        print("ERROR: Missing text")
         return jsonify({"error": "Missing text"}), 400
 
     try:
         message_data = {
-            "chat_id": chat_id,  # This is the UUID string
+            "chat_id": chat_id,
             "sender": session["user"],
             "sender_name": session.get("username", "Anonymous"),
             "text": text,
@@ -378,22 +421,21 @@ def api_chat_send():
         
         resp = supabase.table("messages").insert(message_data).execute()
         
-        print(f"Supabase response: {resp}")
+        print(f"Supabase response data: {resp.data}")
         
         if resp.data:
-            message_data["id"] = resp.data[0]["id"]
-            return jsonify(message_data)
+            inserted_msg = resp.data[0]
+            print(f"✅ Message inserted successfully with ID: {inserted_msg.get('id')}")
+            return jsonify(inserted_msg)
         else:
+            print("ERROR: Insert failed, no data returned")
             return jsonify({"error": "Insert failed, no data returned"}), 500
             
     except Exception as e:
         import traceback
-        print("Error sending message:", traceback.format_exc())
+        print("❌ Error sending message:")
+        print(traceback.format_exc())
         return jsonify({"error": str(e)}), 500
-        
-# =============================
-# chat api
-# =============================
 
 # ==============================
 # Markdown Parser
@@ -460,7 +502,7 @@ def get_all_posts():
             })
         return posts
     except Exception as e:
-        print("Error fetching posts:", e)
+        print(f"Error fetching posts: {e}")
         return []
 
 def get_post_by_slug(slug):
@@ -473,7 +515,7 @@ def get_post_by_slug(slug):
         post["date"] = datetime.fromisoformat(post["created_at"].replace("Z", "+00:00")).strftime("%b %d, %Y")
         return post
     except Exception as e:
-        print("Error fetching post:", e)
+        print(f"Error fetching post: {e}")
         return None
 
 # ==============================
@@ -518,40 +560,6 @@ def delete_post(slug):
         return redirect("/")
     except Exception as e:
         return f"Error deleting: {e}", 500
-        
-@app.route("/api/chat/debug/send", methods=["POST"])
-def debug_send():
-    """Test endpoint to verify message insertion"""
-    if "user" not in session:
-        return jsonify({"error": "No session"}), 401
-    
-    data = request.json
-    print("Session:", dict(session))
-    print("Received data:", data)
-    
-    try:
-        # Simple test insert
-        test_msg = {
-            "chat_id": data.get("chat_id", "test-chat-123"),
-            "sender": session["user"],
-            "sender_name": session.get("username", "test"),
-            "text": data.get("text", "test message"),
-            "created_at": datetime.now(timezone.utc).isoformat()
-        }
-        print("Inserting:", test_msg)
-        
-        resp = supabase.table("messages").insert(test_msg).execute()
-        print("Supabase response:", resp)
-        
-        return jsonify({
-            "success": True,
-            "data": resp.data,
-            "error": resp.error if hasattr(resp, 'error') else None
-        })
-    except Exception as e:
-        import traceback
-        print("Full error:", traceback.format_exc())
-        return jsonify({"error": str(e)}), 500
 
 # ==============================
 # Routes: Auth
@@ -567,16 +575,15 @@ def register():
             flash("All fields are required", "error")
             return redirect("/register")
 
-        # Use Supabase auth to create user
         try:
-            user_resp = supabase.auth.sign_up({
+            user_resp = supabase.login.sign_up({
                 "email": email,
                 "password": password
             })
 
             user = user_resp.user
             if user:
-                # 🔥 Ensure profile exists
+                # Ensure profile exists
                 prof = supabase.table("profiles").select("*").eq("id", user.id).execute()
 
                 if not prof.data:
@@ -590,33 +597,17 @@ def register():
                         "online": True
                     }).eq("id", user.id).execute()
 
+                session.permanent = True
                 session["user"] = user.id
-
                 return redirect("/quickchat")
 
-
-#            if user:
-#                supabase.table("profiles").insert({
-#                    "id": user.id,   # 🔥 MUST match auth user ID
-#                    "name": username,
-#                    "online": False
-#                }).execute()
-#
-#
-#                session["user"] = user.id
-#                session["username"] = username
-#                return redirect("/quickchat")
         except Exception as e:
             flash(f"Sign up error: {str(e)}", "error")
             return redirect("/register")
 
-    return render_template("auth.html")  # your HTML page
+    return render_template("login.html")
 
 
-from flask import Flask, render_template, request, redirect, session, flash, url_for
-from datetime import datetime, timezone
-
-# LOGIN ROUTE
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -628,16 +619,16 @@ def login():
             return redirect(url_for('login'))
 
         try:
-            # Supabase login
-            user_resp = supabase.auth.sign_in_with_password({"email": email, "password": password})
+            user_resp = supabase.login.sign_in_with_password({"email": email, "password": password})
             user = user_resp.user
 
             if user:
                 # Fetch username from profiles table
-                resp = supabase.table("profiles").select("username").eq("id", user.id).single().execute()
-                username = resp.data["username"] if resp.data else "User"
+                resp = supabase.table("profiles").select("name").eq("id", user.id).single().execute()
+                username = resp.data["name"] if resp.data else "User"
 
                 # Store session
+                session.permanent = True
                 session["user"] = user.id
                 session["username"] = username
 
@@ -655,13 +646,11 @@ def login():
             flash(f"Login error: {str(e)}", "error")
             return redirect(url_for('login'))
 
-    return render_template("auth.html")
+    return render_template("login.html")
 
 
-# LOGOUT ROUTE
 @app.route("/chat/logout")
 def chat_logout():
-    # Update Supabase online status if user is logged in
     if "user" in session:
         try:
             supabase.table("profiles").update({
@@ -669,12 +658,9 @@ def chat_logout():
                 "last_seen": datetime.now(timezone.utc).isoformat()
             }).eq("id", session["user"]).execute()
         except Exception as e:
-            print("Logout error:", e)
+            print(f"Logout error: {e}")
 
-    # Clear session
     session.clear()
-
-    # Redirect to login page
     return redirect(url_for('login'))
 
     
@@ -687,8 +673,7 @@ def quickchat():
         return redirect("/login")
 
     user_id = session["user"]
-    print("SESSION USER ID:", user_id)
-
+    print(f"[quickchat] SESSION USER ID: {user_id}")
 
     # Update online status and last_seen
     try:
@@ -697,14 +682,14 @@ def quickchat():
             "last_seen": datetime.now(timezone.utc).isoformat()
         }).eq("id", user_id).execute()
     except Exception as e:
-        print("Online update error:", e)
+        print(f"Online update error: {e}")
 
     # Fetch other online users
     try:
         resp = supabase.table("profiles").select("*").eq("online", True).neq("id", user_id).execute()
         users_data = resp.data or []
     except Exception as e:
-        print("Fetch users error:", e)
+        print(f"Fetch users error: {e}")
         users_data = []
 
     # Pass current user info to template
@@ -727,7 +712,7 @@ def add_friend(friend_id):
             "status": "pending"
         }).execute()
     except Exception as e:
-        print("Add friend error:", e)
+        print(f"Add friend error: {e}")
     return redirect("/quickchat")
 
 # ==============================
@@ -735,5 +720,6 @@ def add_friend(friend_id):
 # ==============================
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-    app.run(host="0.0.0.0", port=port, debug=True)
-
+    # FIX: Disable debug mode in production
+    is_debug = os.environ.get("FLASK_ENV") == "development"
+    app.run(host="0.0.0.0", port=port, debug=is_debug)

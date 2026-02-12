@@ -67,6 +67,55 @@ body {
     animation: fadeOut 0.5s ease forwards;
 }
 
+/* Default/Desktop styles (your existing CSS) */
+.container {
+    width: 1200px;
+    /* your current styles */
+}
+
+/* Mobile adjustments */
+@media screen and (max-width: 768px) {
+    .container {
+        width: 100%;
+        padding: 10px;
+    }
+    
+    /* Make text smaller */
+    body {
+        font-size: 14px;
+    }
+    
+    /* Stack elements vertically instead of side-by-side */
+    .sidebar {
+        width: 100%;
+        float: none;
+    }
+    
+    .main-content {
+        width: 100%;
+        float: none;
+    }
+    
+    /* Adjust buttons/inputs */
+    button, input {
+        width: 100%;
+        padding: 12px; /* easier to tap */
+        font-size: 16px; /* prevents iOS zoom on focus */
+    }
+}
+
+/* Even smaller screens */
+@media screen and (max-width: 480px) {
+    body {
+        font-size: 13px;
+    }
+    
+    h1 {
+        font-size: 1.5em;
+    }
+}
+
+
 @keyframes fadeOut {
     to {
         opacity: 0;

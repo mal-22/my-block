@@ -721,5 +721,5 @@ def add_friend(friend_id):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     # FIX: Disable debug mode in production
-    is_debug = os.environ.get("FLASK_ENV") == "development"
+    #is_debug = os.environ.get("FLASK_ENV") == "development"
     app.run(host="0.0.0.0", port=port, debug=is_debug)

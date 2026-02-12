@@ -102,6 +102,42 @@ def test_supabase():
         return {"status": "ok", "data": resp.data}
     except Exception as e:
         return {"status": "error", "error": str(e)}, 500
+        
+@app.route('/api/diagnose')
+def diagnose():
+    import os
+    
+    results = {
+        "environment": {},
+        "supabase_test": None,
+        "error": None
+    }
+    
+    # Check environment variables (masked for security)
+    supabase_url = os.environ.get("SUPABASE_URL", "NOT SET")
+    supabase_key = os.environ.get("SUPABASE_KEY", "NOT SET")
+    
+    results["environment"] = {
+        "SUPABASE_URL": supabase_url[:30] + "..." if supabase_url != "NOT SET" else "NOT SET",
+        "SUPABASE_KEY": "SET (length: " + str(len(supabase_key)) + ")" if supabase_key != "NOT SET" else "NOT SET",
+        "FLASK_SECRET_KEY": "SET" if os.environ.get("FLASK_SECRET_KEY") else "NOT SET"
+    }
+    
+    # Test Supabase connection
+    try:
+        resp = supabase.table("profiles").select("*").limit(1).execute()
+        results["supabase_test"] = {
+            "status": "SUCCESS",
+            "profiles_count": len(resp.data) if resp.data else 0
+        }
+    except Exception as e:
+        results["error"] = str(e)
+        results["supabase_test"] = {
+            "status": "FAILED",
+            "error": str(e)
+        }
+    
+    return results
 
 
 @app.route('/api/chat/users')

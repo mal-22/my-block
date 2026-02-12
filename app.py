@@ -10,14 +10,24 @@ import uuid
 # ==============================
 # Supabase Configuration
 # ==============================
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://zrckoammnhpjeoygnaec.supabase.co")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "YOUR_SUPABASE_KEY_HERE")
+#SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://zrckoammnhpjeoygnaec.supabase.co")
+#SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "YOUR_SUPABASE_KEY_HERE")
+#
+#if not SUPABASE_URL or not SUPABASE_KEY:
+#    raise RuntimeError("Missing Supabase environment variables")
+#
+#supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+
+print("URL:", SUPABASE_URL)
+print("KEY length:", len(SUPABASE_KEY) if SUPABASE_KEY else "None")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise RuntimeError("Missing Supabase environment variables")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-
 # ==============================
 # Flask App Config
 # ==============================

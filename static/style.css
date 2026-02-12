@@ -27,6 +27,134 @@
   box-sizing: border-box;
 }
 
+/* --- Mobile tweaks --- */
+html, body {
+  height: 100%;
+  overflow: auto;
+}
+
+/* Let page scroll on small screens */
+.chat-app {
+  height: auto;
+  min-height: calc(100vh - 50px);
+}
+
+/* Messages area should not explode in height */
+.messages-area {
+  max-height: calc(100vh - 50px - 60px - 72px);
+}
+
+/* Make debug panel smaller on mobile */
+@media (max-width: 768px) {
+  body {
+    overflow: auto;
+  }
+
+  .navbar {
+    padding: 0 10px;
+  }
+
+  .nav-links {
+    gap: 10px;
+  }
+
+  /* Stack sidebar on top of chat on phones */
+  .chat-app {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    max-height: 200px;
+  }
+
+  .contact-list {
+    max-height: 150px;
+  }
+
+  /* Chat main takes full width */
+  .chat-main {
+    width: 100%;
+  }
+
+  /* Reduce paddings/margins */
+  .messages-area {
+    padding: 12px;
+    max-height: none;
+  }
+
+  .msg-bubble {
+    max-width: 100%;
+    font-size: 12px;
+  }
+
+  .chat-header {
+    padding: 0 12px;
+  }
+
+  .input-area {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .input-field {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .btn-send {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  /* Shrink debug panel */
+  .debug-panel {
+    max-width: 200px;
+    max-height: 100px;
+    font-size: 9px;
+    bottom: 5px;
+    right: 5px;
+  }
+}
+
+/* Extra small phones */
+@media (max-width: 480px) {
+  .nav-links a {
+    font-size: 0.75rem;
+  }
+
+  .sidebar-header,
+  .search-bar {
+    padding: 8px 10px;
+  }
+
+  .contact-item {
+    padding: 8px;
+  }
+
+  .c-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  .header-avatar {
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+  }
+
+  .header-name {
+    font-size: 13px;
+  }
+
+  .header-status {
+    font-size: 10px;
+  }
+}
+
+
 html {
   scroll-behavior: smooth;
 }

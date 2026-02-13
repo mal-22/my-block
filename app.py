@@ -561,92 +561,46 @@ def delete_post(slug):
     except Exception as e:
         return f"Error deleting: {e}", 500
 
-# ==============================
-# Routes: Auth
-# ==============================
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
-        username = request.form.get("username")
-
-        if not email or not password or not username:
-            flash("All fields are required", "error")
-            return redirect("/register")
-
-        try:
-            user_resp = supabase.login.sign_up({
-                "email": email,
-                "password": password
-            })
-
-            user = user_resp.user
-            if user:
-                # Ensure profile exists
-                prof = supabase.table("profiles").select("*").eq("id", user.id).execute()
-
-                if not prof.data:
-                    supabase.table("profiles").insert({
-                        "id": user.id,
-                        "name": email.split("@")[0],
-                        "online": True
-                    }).execute()
-                else:
-                    supabase.table("profiles").update({
-                        "online": True
-                    }).eq("id", user.id).execute()
-
-                session.permanent = True
-                session["user"] = user.id
-                return redirect("/quickchat")
-
-        except Exception as e:
-            flash(f"Sign up error: {str(e)}", "error")
-            return redirect("/register")
-
-    return render_template("login.html")
-
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        email = request.form.get("email")
-        password = request.form.get("password")
-
-        if not email or not password:
-            flash("Email and password required", "error")
-            return redirect(url_for('login'))
-
-        try:
-            user_resp = supabase.login.sign_in_with_password({"email": email, "password": password})
-            user = user_resp.user
-
-            if user:
-                # Fetch username from profiles table
-                resp = supabase.table("profiles").select("name").eq("id", user.id).single().execute()
-                username = resp.data["name"] if resp.data else "User"
-
-                # Store session
-                session.permanent = True
-                session["user"] = user.id
-                session["username"] = username
-
-                # Mark online in Supabase
-                supabase.table("profiles").update({
-                    "online": True,
-                    "last_seen": datetime.now(timezone.utc).isoformat()
-                }).eq("id", user.id).execute()
-
-                return redirect("/quickchat")
-            else:
-                flash("Invalid login", "error")
-                return redirect(url_for('login'))
-        except Exception as e:
-            flash(f"Login error: {str(e)}", "error")
-            return redirect(url_for('login'))
-
-    return render_template("login.html")
+#
+#@app.route("/login", methods=["GET", "POST"])
+#def login():
+#    if request.method == "POST":
+#        email = request.form.get("email")
+#        password = request.form.get("password")
+#
+#        if not email or not password:
+#            flash("Email and password required", "error")
+#            return redirect(url_for('login'))
+#
+#        try:
+#            user_resp = supabase.login.sign_in_with_password({"email": email, "password": password})
+#            user = user_resp.user
+#
+#            if user:
+#                # Fetch username from profiles table
+#                resp = supabase.table("profiles").select("name").eq("id", user.id).single().execute()
+#                username = resp.data["name"] if resp.data else "User"
+#
+#                # Store session
+#                session.permanent = True
+#                session["user"] = user.id
+#                session["username"] = username
+#
+#                # Mark online in Supabase
+#                supabase.table("profiles").update({
+#                    "online": True,
+#                    "last_seen": datetime.now(timezone.utc).isoformat()
+#                }).eq("id", user.id).execute()
+#
+#                return redirect("/quickchat")
+#            else:
+#                flash("Invalid login", "error")
+#                return redirect(url_for('login'))
+#        except Exception as e:
+#            flash(f"Login error: {str(e)}", "error")
+#            return redirect(url_for('login'))
+#
+#    return render_template("login.html")
 
 
 @app.route("/chat/logout")

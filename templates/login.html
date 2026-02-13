@@ -158,12 +158,10 @@
               {% endfor %}
           {% endif %}
       {% endwith %}
-      
       <form method="POST" action="/login">
-          <input type="hidden" name="is_login" id="isLogin" value="false">
           <input type="text" name="username" class="chat-input" placeholder="Username" required maxlength="20">
           <input type="password" name="password" class="chat-input" placeholder="Password" required>
-          <button type="submit" class="chat-btn" id="submitBtn">Sign Up</button>
+          <button type="submit" class="chat-btn">Join Chat</button>
       </form>
       
       <div class="toggle-mode">

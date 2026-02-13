@@ -27,264 +27,6 @@
   box-sizing: border-box;
 }
 
-/* --- Mobile tweaks --- */
-html, body {
-  height: 100%;
-  overflow: auto;
-}
-
-/* Let page scroll on small screens */
-.chat-app {
-  height: auto;
-  min-height: calc(100vh - 50px);
-}
-
-/* Messages area should not explode in height */
-.messages-area {
-  max-height: calc(100vh - 50px - 60px - 72px);
-}
-
-/* Hide toggle button on desktop */
-.mobile-toggle {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  .navbar {
-    justify-content: space-between;
-  }
-
-  .mobile-toggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 999px;
-    border: none;
-    background: var(--surface2);
-    color: var(--text2);
-    margin-right: 8px;
-  }
-
-  .chat-app {
-    position: relative;
-    height: calc(100vh - 50px);
-    overflow: hidden;
-  }
-
-  /* Sidebar becomes an overlay drawer, like Messenger’s thread list */
-  .sidebar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 80%;
-    max-width: 360px;
-    height: 100%;
-    background: var(--surface);
-    z-index: 20;
-    transform: translateX(-100%);
-    transition: transform 0.25s ease-out;
-    border-right: 1px solid var(--border);
-  }
-
-  .sidebar.sidebar-open {
-    transform: translateX(0);
-  }
-
-  /* Main chat fills the screen */
-  .chat-main {
-    width: 100%;
-    height: 100%;
-  }
-
-  .messages-area {
-    padding: 12px;
-  }
-
-  .msg-bubble {
-    max-width: 85%;             /* like Messenger’s bubbles */
-    font-size: 13px;
-  }
-}
-
-
-/* Make debug panel smaller on mobile */
-@media (max-width: 768px) {
-  body {
-    overflow: auto;
-  }
-
-  .navbar {
-    padding: 0 10px;
-  }
-
-  .nav-links {
-    gap: 10px;
-  }
-
-  /* Stack sidebar on top of chat on phones */
-  .chat-app {
-    flex-direction: column;
-  }
-
-  .sidebar {
-    width: 100%;
-    max-height: 200px;
-  }
-
-  .contact-list {
-    max-height: 150px;
-  }
-
-  /* Chat main takes full width */
-  .chat-main {
-    width: 100%;
-  }
-
-  /* Reduce paddings/margins */
-  .messages-area {
-    padding: 12px;
-    max-height: none;
-  }
-
-  .msg-bubble {
-    max-width: 100%;
-    font-size: 12px;
-  }
-
-  .chat-header {
-    padding: 0 12px;
-  }
-
-  .input-area {
-    padding: 10px 12px;
-    gap: 8px;
-  }
-
-  .input-field {
-    padding: 10px 12px;
-    font-size: 12px;
-  }
-
-  .btn-send {
-    width: 40px;
-    height: 40px;
-    font-size: 18px;
-  }
-
-  /* Shrink debug panel */
-  .debug-panel {
-    max-width: 200px;
-    max-height: 100px;
-    font-size: 9px;
-    bottom: 5px;
-    right: 5px;
-  }
-}
-
-/* Extra small phones */
-@media (max-width: 480px) {
-  .nav-links a {
-    font-size: 0.75rem;
-  }
-
-  .sidebar-header,
-  .search-bar {
-    padding: 8px 10px;
-  }
-
-  .contact-item {
-    padding: 8px;
-  }
-
-  .c-avatar {
-    width: 32px;
-    height: 32px;
-    font-size: 14px;
-  }
-
-  .header-avatar {
-    width: 34px;
-    height: 34px;
-    font-size: 16px;
-  }
-
-  .header-name {
-    font-size: 13px;
-  }
-
-  .header-status {
-    font-size: 10px;
-  }
-}
-/* Mobile: switch to single-column layout */
-@media (max-width: 768px) {
-  /* Allow vertical scrolling */
-  html, body {
-    height: 100%;
-    overflow: auto;
-  }
-  .chat-app {
-    display: flex;
-    height: calc(100vh - 50px);
-  }
-
-  .sidebar {
-    width: 320px;            /* fixed left column */
-    max-width: 30vw;
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-  }
-
-  .chat-main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* messages fill remaining space between header and input */
-  .messages-area {
-    flex: 1;
-    overflow-y: auto;
-  }
-
-  .msg-bubble {
-    max-width: 100%;
-    font-size: 12px;
-  }
-
-  /* Shrink debug panel so it doesn't cover everything */
-  .debug-panel {
-    max-width: 180px;
-    max-height: 90px;
-    font-size: 9px;
-    bottom: 4px;
-    right: 4px;
-  }
-}
-
-/* Extra small phones: even tighter */
-@media (max-width: 480px) {
-  .sidebar {
-    max-height: 190px;
-  }
-
-  .contact-list {
-    max-height: 130px;
-  }
-
-  .chat-main {
-    height: calc(100vh - 50px - 190px);
-  }
-
-  .nav-links a {
-    font-size: 0.75rem;
-  }
-}
-
-
 html {
   scroll-behavior: smooth;
 }
@@ -331,48 +73,231 @@ body {
     /* your current styles */
 }
 
-/* Mobile adjustments */
-@media screen and (max-width: 768px) {
-    .container {
-        width: 100%;
-        padding: 10px;
+/* Mobile-First Responsive Design */
+.mobile-menu-btn {
+    display: none;  /* hidden on desktop */
+}
+@media (max-width: 768px) {
+
+    .mobile-menu-btn {
+        display: flex;   /* show on mobile only */
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        background: rgba(26, 26, 34, 0.8);
+        border: 1.5px solid rgba(124, 107, 255, 0.3);
+        border-radius: 12px;
+        margin-right: 12px;
+        color: var(--text2);
+        font-size: 18px;
+        font-weight: 600;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
     }
-    
-    /* Make text smaller */
-    body {
-        font-size: 14px;
+
+    .navbar {
+        height: 56px;
+        padding: 0 12px;
     }
-    
-    /* Stack elements vertically instead of side-by-side */
-    .sidebar {
-        width: 100%;
-        float: none;
+
+    .nav-container {
+        padding: 0;
     }
-    
-    .main-content {
-        width: 100%;
-        float: none;
+
+    .logo {
+        font-size: 1rem;
     }
-    
-    /* Adjust buttons/inputs */
-    button, input {
-        width: 100%;
-        padding: 12px; /* easier to tap */
-        font-size: 16px; /* prevents iOS zoom on focus */
+
+    .nav-links {
+        gap: 15px;
+    }
+
+    .nav-links a {
+        font-size: 0.8rem;
     }
 }
+    
+    /* Overlay when sidebar is open */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 56px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.6);
+        z-index: 999;
+        backdrop-filter: blur(4px);
+    }
+    
+    .sidebar-overlay.active {
+        display: block;
+    }
+    
+    /* Chat Main - Full width */
+    @media (max-width: 768px) {
 
-/* Even smaller screens */
-@media screen and (max-width: 480px) {
-    body {
+        .chat-app {
+            position: relative;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 50px; /* below navbar */
+            left: 0;
+            width: 85%;
+            max-width: 320px;
+            height: calc(100vh - 50px);
+            background: var(--surface);
+            z-index: 2000;
+
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+
+        .chat-main {
+            width: 100%;
+            flex: 1;
+        }
+    }
+
+    
+    .chat-main {
+        width: 100%;
+    }
+    
+    /* Chat Header */
+    .chat-header {
+        height: 56px;
+        padding: 0 12px;
+    }
+    
+    .header-avatar {
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+    }
+    
+    .header-name {
         font-size: 13px;
     }
     
-    h1 {
-        font-size: 1.5em;
+    .header-status {
+        font-size: 10px;
+    }
+    
+    /* Messages Area */
+    .messages-area {
+        padding: 12px;
+        gap: 8px;
+    }
+    
+    .msg-bubble {
+        max-width: 85%;
+        padding: 10px 14px;
+        font-size: 14px;
+        border-radius: 16px;
+    }
+    
+    .msg-sender-label {
+        font-size: 10px;
+    }
+    
+    .msg-meta {
+        font-size: 9px;
+    }
+    
+    /* Input Area - Fixed at bottom */
+    .input-area {
+        padding: 10px 12px;
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+        gap: 8px;
+    }
+    
+    .input-field {
+        padding: 12px 16px;
+        font-size: 16px; /* Prevents iOS zoom on focus */
+        border-radius: 20px;
+    }
+    
+    .btn-send {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+    }
+    
+    /* Contact items - Larger touch targets */
+    .contact-item {
+        padding: 14px 12px;
+        margin-bottom: 6px;
+    }
+    
+    .c-avatar {
+        width: 44px;
+        height: 44px;
+    }
+    
+    .c-name {
+        font-size: 14px;
+    }
+    
+    .c-preview {
+        font-size: 12px;
+    }
+    
+    .btn-mini {
+        padding: 8px 14px;
+        font-size: 11px;
+    }
+    
+    /* Empty state */
+    .empty-icon {
+        font-size: 48px;
+    }
+    
+    .empty-text {
+        font-size: 13px;
+        padding: 0 20px;
+        text-align: center;
     }
 }
 
+/* Small phones */
+@media (max-width: 380px) {
+    .msg-bubble {
+        max-width: 90%;
+        font-size: 13px;
+    }
+    
+    .c-info {
+        max-width: 120px;
+    }
+}
+
+/* Landscape mode fixes */
+@media (max-height: 500px) and (orientation: landscape) {
+    .navbar {
+        height: 48px;
+    }
+    
+    .sidebar {
+        top: 48px;
+        height: calc(100vh - 48px);
+    }
+    
+    .input-area {
+        padding: 8px 12px;
+    }
+}
 
 @keyframes fadeOut {
     to {

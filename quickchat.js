@@ -19,11 +19,3 @@ async function loadOnlineUsers() {
   document.getElementById("online-users").innerHTML =
       data.map(u => `<div>${u.name}</div>`).join("");
 }
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('sidebar-open');
-}
-function openChat(userId, username, chatId, event) {
-  if (event) event.stopPropagation();
-  // existing logic...
-  document.getElementById('sidebar').classList.remove('sidebar-open');
-}

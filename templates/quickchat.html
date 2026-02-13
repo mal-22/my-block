@@ -1,8 +1,14 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="/static/icon-192.png">
+    <meta name="theme-color" content="#0a0a0f">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>FlashChat - Chronicle</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -547,6 +553,30 @@
         .btn-send:active {
             transform: scale(0.95);
         }
+        /* profile */
+        .sidebar-footer {
+            padding: 10px 15px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .me-avatar {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            flex-shrink: 0;
+        }
+        
+        .me-info { flex: 1; }
+        .me-name { font-size: 12px; font-weight: 600; color: var(--text); }
+        .me-status { font-size: 10px; color: var(--accent3); }
+        
         
         /* Debug Panel - bottom right corner */
         .debug-panel {
@@ -576,8 +606,9 @@
 <body>
     
 <nav class="navbar">
+  <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
   <div class="nav-container">
-    <button class="mobile-toggle" onclick="toggleSidebar()">☰</button>
     <a href="/" class="logo">Chronicle</a>
     <div class="nav-links">
       <a href="/">Home</a>
@@ -608,10 +639,18 @@
     </div>
 
     <div class="section-label">Active Conversations</div>
-
+    
     <div class="contact-list" id="contactList">
       <!-- Contacts rendered here by JS -->
     </div>
+    <div class="sidebar-footer">
+        <div class="me-avatar" id="currentAvatar">👤</div>
+        <div class="me-info">
+            <div class="me-name" id="currentUsername">You</div>
+            <div class="me-status">● Online</div>
+        </div>
+    </div>
+    
   </aside>
 
   <!-- Main chat pane -->
@@ -669,7 +708,7 @@
 <script>
     // FIX: Configuration
     const POLLING_INTERVAL = 2000; // FIX: Changed from 800ms to 2000ms (2 seconds) for better server performance
-    const DEBUG_MODE = true;
+    const DEBUG_MODE = false;
     
     let currentUser = null;
     let currentChat = null;
@@ -688,6 +727,86 @@
         const lines = log.innerHTML.split('<br>');
         if (lines.length > 20) {
             log.innerHTML = lines.slice(0, 20).join('<br>');
+        }
+    }
+    // Mobile sidebar toggle with overlay
+    function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        sidebar.classList.toggle('active');
+        overlay.classList.toggle('active');
+    }
+
+    // Close sidebar when clicking overlay or a contact
+    document.addEventListener('click', (e) => {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        
+        if (e.target === overlay) {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        }
+        
+        // Close sidebar when selecting a contact on mobile
+        if (window.innerWidth <= 768 && e.target.closest('.contact-item')) {
+            setTimeout(() => {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            }, 100);
+        }
+    });
+
+    // Prevent zoom on double-tap for iOS
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (e) => {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+            e.preventDefault();
+        }
+        lastTouchEnd = now;
+    }, { passive: false });
+
+    // Handle keyboard appearance on mobile (resize handling)
+    let initialHeight = window.innerHeight;
+    window.addEventListener('resize', () => {
+        const chatApp = document.querySelector('.chat-app');
+        const messagesArea = document.getElementById('messagesArea');
+        
+        if (window.innerHeight < initialHeight * 0.8) {
+            // Keyboard likely opened
+            setTimeout(() => {
+                messagesArea.scrollTop = messagesArea.scrollHeight;
+            }, 300);
+        }
+    });
+
+    // Swipe gesture to open sidebar
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    document.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    }, { passive: true });
+
+    function handleSwipe() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        
+        // Swipe right from left edge to open
+        if (touchEndX - touchStartX > 100 && touchStartX < 50) {
+            sidebar.classList.add('active');
+            overlay.classList.add('active');
+        }
+        
+        // Swipe left to close
+        if (touchStartX - touchEndX > 100 && sidebar.classList.contains('active')) {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
         }
     }
     
@@ -713,6 +832,18 @@
             debug('Current user: ' + user.username + ' (ID: ' + user.id + ')');
             return user;
         })
+        .then(user => {
+                currentUser = user;
+                debug('Current user: ' + user.username + ' (ID: ' + user.id + ')');
+                
+                // Update sidebar footer right here
+                const usernameEl = document.getElementById('currentUsername');
+                const avatarEl = document.getElementById('currentAvatar');
+                if (usernameEl) usernameEl.textContent = user.username;
+                if (avatarEl) avatarEl.textContent = user.username[0].toUpperCase();
+                
+                return user;
+            })
         .catch(err => {
             debug('Error fetching current user: ' + err);
             throw err;
@@ -828,6 +959,9 @@
     }
     
     function openChat(userId, username, serverChatId, event) {
+        if (window.innerWidth <= 768) {
+                document.querySelector('.sidebar')?.classList.remove('active');
+            }
         if (event) event.stopPropagation();
         
         debug('Opening chat with: ' + username);

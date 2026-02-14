@@ -615,7 +615,6 @@
       <a href="/quickchat" class="active">QuickChat</a>
       <a href="/chat/logout">Logout</a>
       <div class="chat-actions">
-        <!-- Single bell button -->
         <button class="icon-btn" id="notifButton" title="Friend requests">
           🔔
           <span class="notif-badge" id="notifBadge" style="
@@ -630,7 +629,6 @@
           "></span>
         </button>
 
-        <!-- Dropdown for requests -->
         <div id="notifDropdown" style="
           position:absolute;
           right:20px;
@@ -646,9 +644,7 @@
           font-size:12px;
         "></div>
 
-        <button class="icon-btn" title="Info">
-          ℹ️
-        </button>
+        <button class="icon-btn" title="Info">ℹ️</button>
       </div>
 
     </div>
@@ -896,10 +892,7 @@
     // FIX: Fetch users with better error handling
 
     function fetchUsers() {
-      if (isSearching) {
-        // Don’t override global search results
-        return;
-      }
+      if (isSearching) return; // if you added the search flag
 
       debug('Fetching users list (friends only)...');
       fetch('/api/chat/users', { credentials: 'include' })
@@ -909,11 +902,12 @@
         })
         .then(users => {
           if (!Array.isArray(users)) users = [];
-          allUsers = users;
+          allUsers = users;        // important
           renderUsers(users);
         })
         .catch(err => debug('Error fetching users', err));
     }
+
 
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
@@ -961,7 +955,16 @@
           }
         });
       }
+
+      // existing init:
+      fetchCurrentUser().then(() => {
+        fetchUsers();
+        refreshNotifications();
+        setInterval(fetchUsers, 10000);
+        setInterval(refreshNotifications, 10000);
+      }).catch(() => {});
     });
+
     
     function toggleNotifDropdown() {
       const dropdown = document.getElementById('notifDropdown');
@@ -972,8 +975,8 @@
         return;
       }
 
-      // Filter users who sent me a request
       const requesters = allUsers.filter(u => u.hasrequest);
+      debug('toggleNotifDropdown: requesters count', requesters.length);
 
       if (requesters.length === 0) {
         dropdown.innerHTML =
@@ -991,7 +994,9 @@
                 ${u.username ? u.username[0].toUpperCase() : '?'}
               </div>
               <div>
-                <div style="font-weight:600;color:var(--text);">${escapeHtml(u.username || 'Unknown')}</div>
+                <div style="font-weight:600;color:var(--text);">
+                  ${escapeHtml(u.username || 'Unknown')}
+                </div>
                 <div style="font-size:10px;color:var(--text3);">
                   ${u.online ? 'Online' : 'Offline'}
                 </div>
@@ -1008,7 +1013,7 @@
 
       dropdown.style.display = 'block';
     }
-    
+
     function acceptFromNotif(userId, event) {
       if (event) event.stopPropagation();
       acceptRequest(userId, event);

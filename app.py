@@ -320,7 +320,7 @@ def get_chat_users():
         return jsonify({"error": "Not authenticated"}), 401
 
     try:
-        # 1) Find all active chats this user is in
+        # 1) Active chats for current user (friends)
         chats_resp = safe_supabase_call(
             lambda: supabase.table("active_chats")
             .select("id, participants")
@@ -329,7 +329,6 @@ def get_chat_users():
         )
         chats = getattr(chats_resp, "data", []) or []
 
-        # Map other_user_id -> chat_id
         partner_to_chat = {}
         for chat in chats:
             parts = chat.get("participants") or []
@@ -339,19 +338,8 @@ def get_chat_users():
                     partner_to_chat[others[0]] = chat["id"]
 
         partner_ids = list(partner_to_chat.keys())
-        if not partner_ids:
-            return jsonify([]), 200
 
-        # 2) Load partner profiles
-        profiles_resp = safe_supabase_call(
-            lambda: supabase.table("profiles")
-            .select("id, name, online, last_seen")
-            .in_("id", partner_ids)
-            .execute()
-        )
-        profiles = getattr(profiles_resp, "data", []) or []
-
-        # 3) Requests info (for badges)
+        # 2) Also include users who sent me a pending request (so bell dropdown can show them)
         incoming_resp = safe_supabase_call(
             lambda: supabase.table("chat_requests")
             .select("from_user")
@@ -361,6 +349,21 @@ def get_chat_users():
         )
         incoming_from = {row["from_user"] for row in (getattr(incoming_resp, "data", []) or [])}
 
+        # union: accepted friends + people who sent me a pending request
+        user_ids = list(set(partner_ids) | incoming_from)
+        if not user_ids:
+            return jsonify([]), 200
+
+        # 3) Load profiles for those ids
+        profiles_resp = safe_supabase_call(
+            lambda: supabase.table("profiles")
+            .select("id, name, online, last_seen")
+            .in_("id", user_ids)
+            .execute()
+        )
+        profiles = getattr(profiles_resp, "data", []) or []
+
+        # 4) Outgoing pending (for "Pending..." state)
         outgoing_resp = safe_supabase_call(
             lambda: supabase.table("chat_requests")
             .select("to_user")
@@ -370,7 +373,6 @@ def get_chat_users():
         )
         outgoing_to = {row["to_user"] for row in (getattr(outgoing_resp, "data", []) or [])}
 
-        # 4) Build result list: only accepted chats
         result = []
         for p in profiles:
             uid = p["id"]
@@ -378,9 +380,9 @@ def get_chat_users():
                 "id": uid,
                 "username": p.get("name"),
                 "online": p.get("online", False),
-                "hasrequest": uid in incoming_from,   # should usually be false if already accepted
+                "hasrequest": uid in incoming_from,
                 "requestsent": uid in outgoing_to,
-                "chatactive": True,
+                "chatactive": uid in partner_to_chat,
                 "chatid": partner_to_chat.get(uid),
             })
 
@@ -390,6 +392,7 @@ def get_chat_users():
         print("API chatusers error", e)
         print(traceback.format_exc())
         return jsonify([]), 200
+
 
 
         
@@ -803,9 +806,9 @@ def delete_post(slug):
 # ==============================
 # Main entry
 # ==============================
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))
-    # FIX: Disable debug mode in production
-    is_debug = os.environ.get("FLASK_ENV") == "development"
-    app.run(host="0.0.0.0", port=port, debug=is_debug)
+#if __name__ == "__main__":
+#    port = int(os.environ.get("PORT", 8000))
+#    # FIX: Disable debug mode in production
+#    is_debug = os.environ.get("FLASK_ENV") == "development"
+#    app.run(host="0.0.0.0", port=port, debug=is_debug)
 

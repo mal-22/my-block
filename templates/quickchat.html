@@ -614,6 +614,43 @@
       <a href="/">Home</a>
       <a href="/quickchat" class="active">QuickChat</a>
       <a href="/chat/logout">Logout</a>
+      <div class="chat-actions">
+        <!-- Single bell button -->
+        <button class="icon-btn" id="notifButton" title="Friend requests">
+          🔔
+          <span class="notif-badge" id="notifBadge" style="
+            display:none;
+            margin-left:4px;
+            background:var(--accent2);
+            color:white;
+            border-radius:999px;
+            padding:0 6px;
+            font-size:10px;
+            font-weight:700;
+          "></span>
+        </button>
+
+        <!-- Dropdown for requests -->
+        <div id="notifDropdown" style="
+          position:absolute;
+          right:20px;
+          top:50px;
+          background:var(--surface2);
+          border:1px solid var(--border);
+          border-radius:8px;
+          padding:8px 0;
+          min-width:220px;
+          box-shadow:0 4px 16px rgba(0,0,0,0.4);
+          display:none;
+          z-index:999;
+          font-size:12px;
+        "></div>
+
+        <button class="icon-btn" title="Info">
+          ℹ️
+        </button>
+      </div>
+
     </div>
   </div>
 </nav>
@@ -665,9 +702,9 @@
     <div class="chat-view hidden" id="chatView">
       <div class="chat-header">
         <div class="chat-header-user">
-          <div class="header-avatar" id="chatAvatar">U</div>
+          <div class="header-avatar" id="chatAvatar"></div>
           <div class="header-info">
-            <div class="header-name" id="chatName">User</div>
+          <div class="header-name" id="chatName"></div>
             <div class="header-status">
               <span class="pulse-dot"></span>
               Online
@@ -706,14 +743,20 @@
 </div>
 
 <script>
+    window.config = {
+        SUPABASE_URL: "{{ config.SUPABASE_URL }}",
+        SUPABASE_ANON_KEY: "{{ config.SUPABASE_ANON_KEY }}"
+    };
     // FIX: Configuration
     const POLLING_INTERVAL = 2000; // FIX: Changed from 800ms to 2000ms (2 seconds) for better server performance
-    const DEBUG_MODE = false;
+    const DEBUG_MODE = true;
     
     let currentUser = null;
     let currentChat = null;
     let currentChatId = null;
     let messageInterval = null;
+    let allUsers = [];
+    let isSearching = false;
     let messageElements = {}; // Track message IDs → DOM elements
     
     // Debug helper
@@ -821,7 +864,7 @@
                 debug('ERROR: Failed to fetch user, status: ' + r.status);
                 if (r.status === 401) {
                     debug('Redirecting to login...');
-                    window.location.href = '/auth';
+                    window.location.href = '/login';
                 }
                 throw new Error('HTTP ' + r.status);
             }
@@ -851,162 +894,328 @@
     }
     
     // FIX: Fetch users with better error handling
+
     function fetchUsers() {
-        debug('Fetching users list...');
-        fetch('/api/chat/users', {
-            credentials: 'include' // FIX: Important for session cookies
-        })
+      if (isSearching) {
+        // Don’t override global search results
+        return;
+      }
+
+      debug('Fetching users list (friends only)...');
+      fetch('/api/chat/users', { credentials: 'include' })
         .then(r => {
-            if (!r.ok) {
-                debug('ERROR: Failed to fetch users, status: ' + r.status);
-                if (r.status === 401) {
-                    debug('Redirecting to login...');
-                    window.location.href = '/auth';
-                }
-                throw new Error('HTTP ' + r.status);
-            }
-            return r.json();
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
         })
         .then(users => {
-            debug('Received ' + users.length + ' users');
-            renderUsers(users);
+          if (!Array.isArray(users)) users = [];
+          allUsers = users;
+          renderUsers(users);
         })
-        .catch(err => debug('Error fetching users: ' + err));
+        .catch(err => debug('Error fetching users', err));
     }
+
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', e => {
+        const q = e.target.value.trim();
+
+        if (!q) {
+          // Back to friends mode
+          isSearching = false;
+          fetchUsers();
+          return;
+        }
+
+        isSearching = true;
+        debug('Searching users:', q);
+        fetch('/api/chat/users/search?q=' + encodeURIComponent(q), {
+          credentials: 'include'
+        })
+          .then(r => {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+          })
+          .then(users => {
+            if (!Array.isArray(users)) users = [];
+            renderUsers(users);
+          })
+          .catch(err => debug('Error searching users', err));
+      });
+    }
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const notifButton = document.getElementById('notifButton');
+      const notifDropdown = document.getElementById('notifDropdown');
+
+      if (notifButton && notifDropdown) {
+        notifButton.addEventListener('click', e => {
+          e.stopPropagation();
+          toggleNotifDropdown();
+        });
+
+        document.addEventListener('click', e => {
+          if (!notifDropdown.contains(e.target) && e.target !== notifButton) {
+            notifDropdown.style.display = 'none';
+          }
+        });
+      }
+    });
+    
+    function toggleNotifDropdown() {
+      const dropdown = document.getElementById('notifDropdown');
+      if (!dropdown) return;
+
+      if (dropdown.style.display === 'block') {
+        dropdown.style.display = 'none';
+        return;
+      }
+
+      // Filter users who sent me a request
+      const requesters = allUsers.filter(u => u.hasrequest);
+
+      if (requesters.length === 0) {
+        dropdown.innerHTML =
+          '<div style="padding:8px 12px;color:var(--text3);">No pending requests</div>';
+      } else {
+        dropdown.innerHTML = requesters.map(u => `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 12px;gap:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="
+                width:24px;height:24px;border-radius:6px;
+                background:var(--surface3);display:flex;
+                align-items:center;justify-content:center;
+                font-size:12px;
+              ">
+                ${u.username ? u.username[0].toUpperCase() : '?'}
+              </div>
+              <div>
+                <div style="font-weight:600;color:var(--text);">${escapeHtml(u.username || 'Unknown')}</div>
+                <div style="font-size:10px;color:var(--text3);">
+                  ${u.online ? 'Online' : 'Offline'}
+                </div>
+              </div>
+            </div>
+            <button class="btn-mini btn-accept"
+              style="font-size:10px;padding:4px 8px;"
+              onclick="acceptFromNotif('${u.id}', event)">
+              Accept
+            </button>
+          </div>
+        `).join('');
+      }
+
+      dropdown.style.display = 'block';
+    }
+    
+    function acceptFromNotif(userId, event) {
+      if (event) event.stopPropagation();
+      acceptRequest(userId, event);
+      const dropdown = document.getElementById('notifDropdown');
+      if (dropdown) dropdown.style.display = 'none';
+    }
+
+
+
+    function applySearchFilter() {
+      const term = document.getElementById('searchInput').value.trim().toLowerCase();
+      if (!term) {
+        renderUsers(allUsers);
+        return;
+      }
+      const filtered = allUsers.filter(u =>
+        u.username && u.username.toLowerCase().includes(term)
+      );
+      renderUsers(filtered);
+    }
+
+    document.getElementById('searchInput')
+      .addEventListener('input', applySearchFilter);
     
     function renderUsers(users) {
-        const list = document.getElementById('contactList');
-        list.innerHTML = '';
-        
-        if (users.length === 0) {
-            list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">No other users online</div>';
-            return;
+      const list = document.getElementById('contactList');
+      list.innerHTML = '';
+
+      if (!users || users.length === 0) {
+        list.innerHTML =
+          '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">No users found</div>';
+        return;
+      }
+
+      users.forEach(user => {
+        const item = document.createElement('div');
+        item.className = 'contact-item';
+
+        const statusClass = user.online ? 'status-online' : 'status-offline';
+        const hasRequest = user.hasrequest;
+        const requestSent = user.requestsent;
+        const chatActive = user.chatactive;
+        const chatId = user.chatid;
+
+        let actionHtml;
+        if (hasRequest) {
+          actionHtml =
+            `<button class="btn-mini btn-accept" onclick="acceptRequest('${user.id}', event)">Accept</button>`;
+        } else if (chatActive && chatId) {
+          actionHtml =
+            `<button class="btn-mini btn-request" onclick="openChat('${user.id}', '${user.username}', '${chatId}', event)" style="background:var(--accent);color:white;">Open</button>`;
+        } else if (requestSent) {
+          actionHtml = `<span style="font-size:10px;color:var(--text3);">Pending...</span>`;
+        } else {
+          actionHtml =
+            `<button class="btn-mini btn-request" onclick="sendRequest('${user.id}', event)">Request</button>`;
         }
-        
-        users.forEach(user => {
-            const item = document.createElement('div');
-            item.className = 'contact-item';
-            
-            const statusClass = user.online ? 'status-online' : 'status-offline';
-            const hasRequest = user.has_request;
-            const requestSent = user.request_sent;
-            const chatActive = user.chat_active;
-            
-            let actionHtml = '';
-            if (hasRequest) {
-                actionHtml = `<button class="btn-mini btn-accept" onclick="acceptRequest('${user.id}', event)">Accept</button>`;
-            } else if (chatActive) {
-                actionHtml = `<button class="btn-mini btn-request" onclick="openChat('${user.id}', '${user.username}', '${user.chat_id}', event)" style="background: var(--accent); color: white;">Open</button>`;
-            } else if (requestSent) {
-                actionHtml = `<span style="font-size:10px;color:var(--text3);">Pending...</span>`;
-            } else {
-                actionHtml = `<button class="btn-mini btn-request" onclick="sendRequest('${user.id}', event)">Request</button>`;
-            }
-            
-            item.innerHTML = `
-                <div class="c-avatar">
-                    ${user.username[0].toUpperCase()}
-                    <div class="status-dot ${statusClass}"></div>
-                    ${hasRequest ? '<div class="ftc-badge">!</div>' : ''}
-                </div>
-                <div class="c-info">
-                    <div class="c-name">${escapeHtml(user.username)}</div>
-                    <div class="c-preview">${user.online ? 'Online' : 'Offline'}</div>
-                </div>
-                <div class="c-actions">
-                    ${actionHtml}
-                </div>
-            `;
-            
-            list.appendChild(item);
+
+        item.innerHTML = `
+          <div class="c-avatar">
+            ${user.username ? user.username[0].toUpperCase() : '?'}
+            <div class="status-dot ${statusClass}"></div>
+            ${hasRequest ? '<div class="ftc-badge">!</div>' : ''}
+          </div>
+          <div class="c-info">
+            <div class="c-name">${escapeHtml(user.username || 'Unknown')}</div>
+            <div class="c-preview">${user.online ? 'Online' : 'Offline'}</div>
+          </div>
+          <div class="c-actions">
+            ${actionHtml}
+          </div>
+        `;
+
+        item.addEventListener('click', e => {
+          if (chatActive && chatId) {
+            openChat(user.id, user.username, chatId, e);
+          }
         });
+
+        list.appendChild(item);
+      });
     }
+
     
     function sendRequest(userId, event) {
-        event.stopPropagation();
-        debug('Sending request to user: ' + userId);
-        
-        fetch('/api/chat/request', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            credentials: 'include', // FIX: Include credentials
-            body: JSON.stringify({user_id: userId})
-        })
+      event.stopPropagation();
+      debug('Sending request to user', userId);
+      fetch('/api/chat/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ userid: userId })
+      })
         .then(r => r.json())
         .then(data => {
-            debug('Request sent successfully');
-            fetchUsers();
+          debug('Request sent successfully', data);
+          fetchUsers(); // refresh list
         })
-        .catch(err => debug('Error sending request: ' + err));
+        .catch(err => debug('Error sending request', err));
     }
-    
+
     function acceptRequest(userId, event) {
-        event.stopPropagation();
-        debug('Accepting request from user: ' + userId);
-        
-        fetch('/api/chat/request/accept', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            credentials: 'include', // FIX: Include credentials
-            body: JSON.stringify({user_id: userId})
-        })
+      event.stopPropagation();
+      debug('Accepting request from user', userId);
+      fetch('/api/chat/request/accept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ userid: userId })
+      })
         .then(r => r.json())
         .then(data => {
-            debug('Request accepted, chat_id: ' + data.chat_id);
-            fetchUsers();
+          debug('Request accepted, chatid', data.chatid);
+          fetchUsers();        // this is what causes button to change to Open
+          refreshNotifications();
         })
-        .catch(err => debug('Error accepting request: ' + err));
+        .catch(err => debug('Error accepting request', err));
     }
+
+
+    function refreshNotifications() {
+      fetch('/api/chat/requests', { credentials: 'include' })
+        .then(r => {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        })
+        .then(data => {
+          const count = data && typeof data.count === 'number' ? data.count : 0;
+          const badge = document.getElementById('notifBadge');
+          if (!badge) return;
+          if (count > 0) {
+            badge.style.display = 'inline-block';
+            badge.textContent = count;
+          } else {
+            badge.style.display = 'none';
+          }
+        })
+        .catch(err => debug('Error fetching notifications', err));
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const notifButton = document.getElementById('notifButton');
+      if (notifButton) {
+          notifButton.addEventListener('click', () => {
+          // For now just focus the sidebar; you can later open a dedicated modal
+          fetchUsers();
+          setTimeout(() => {
+                 const firstReq = Array.from(document.querySelectorAll('.contact-item'))
+                   .find(item => item.querySelector('.ftc-badge'));
+                 if (firstReq) {
+                   firstReq.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                 }
+               }, 200);
+          document.querySelector('.sidebar')?.classList.add('active');
+          document.getElementById('sidebarOverlay')?.classList.add('active');
+        });
+      }
+
+      // existing initApp already calls fetchCurrentUser & fetchUsers
+      // here we just start notifications polling
+      setInterval(refreshNotifications, 5000);
+      refreshNotifications();
+    });
     
     function openChat(userId, username, serverChatId, event) {
-        if (window.innerWidth <= 768) {
-                document.querySelector('.sidebar')?.classList.remove('active');
-            }
-        if (event) event.stopPropagation();
-        
-        debug('Opening chat with: ' + username);
-        
-        const user = {
-            id: userId,
-            username: username
-        };
-        
-        currentChat = user;
-        
-        // FIX: Always use server-provided chat_id if available
-        if (serverChatId && serverChatId !== 'null' && serverChatId !== 'undefined') {
-            currentChatId = serverChatId;
-            debug('Using server chat_id: ' + currentChatId);
-        } else {
-            // This shouldn't happen for active chats, but fallback just in case
-            currentChatId = [currentUser.id, user.id].sort().join('_');
-            debug('WARNING: Using generated chat_id: ' + currentChatId);
-        }
-        
-        // Show chat interface
-        document.getElementById('emptyState').style.display = 'none';
-        const chatView = document.getElementById('chatView');
-        chatView.style.display = 'flex';
-        chatView.classList.remove('hidden');
-        
-        document.getElementById('chatName').textContent = user.username;
-        document.getElementById('chatAvatar').textContent = user.username[0].toUpperCase();
-        
-        // Clear messages
-        document.getElementById('messagesArea').innerHTML = '';
-        messageElements = {};
-        
-        // Load messages
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar')?.classList.remove('active');
+        document.getElementById('sidebarOverlay')?.classList.remove('active');
+      }
+
+      if (event) event.stopPropagation();
+
+      debug('Opening chat with: ' + username);
+
+      const user = { id: userId, username };
+      currentChat = user;
+      if (serverChatId && serverChatId !== 'null' && serverChatId !== 'undefined') {
+        currentChatId = serverChatId;
+      } else {
+        currentChatId = [currentUser.id, user.id].sort().join('-');
+        debug('WARNING: Using generated chat_id: ' + currentChatId);
+      }
+
+      document.getElementById('emptyState').style.display = 'none';
+      const chatView = document.getElementById('chatView');
+      chatView.style.display = 'flex';
+      chatView.classList.remove('hidden');
+
+      const nameEl = document.getElementById('chatName');
+      const avatarEl = document.getElementById('chatAvatar');
+      if (nameEl) nameEl.textContent = user.username;
+      if (avatarEl) avatarEl.textContent = user.username[0].toUpperCase();
+
+      document.getElementById('messagesArea').innerHTML = '';
+      messageElements = {};
+
+      loadMessages(currentChatId);
+
+      if (messageInterval) clearInterval(messageInterval);
+      messageInterval = setInterval(() => {
         loadMessages(currentChatId);
-        
-        // FIX: Start polling with better interval
-        if (messageInterval) clearInterval(messageInterval);
-        messageInterval = setInterval(() => {
-            loadMessages(currentChatId);
-        }, POLLING_INTERVAL); // FIX: Using 2 second interval instead of 800ms
-        
-        setTimeout(() => document.getElementById('messageInput').focus(), 100);
+      }, POLLING_INTERVAL);
+
+      setTimeout(() => document.getElementById('messageInput').focus(), 100);
     }
+
+
 
     function loadMessages(chatId) {
         debug('Loading messages for chat: ' + chatId);
@@ -1019,7 +1228,7 @@
                 debug('ERROR: Failed to load messages, status: ' + r.status);
                 if (r.status === 401) {
                     debug('Session expired, redirecting to login...');
-                    window.location.href = '/auth';
+                    window.location.href = '/login';
                 }
                 throw new Error('HTTP ' + r.status);
             }
@@ -1048,7 +1257,9 @@
             messages.forEach(msg => {
                 if (!messageElements[msg.id]) {
                     // Only add if less than 30 seconds old (double-check)
-                    const age = (Date.now() - new Date(msg.created_at).getTime()) / 1000;
+                    const age = (Date.now() - new Date(msg.createdat).getTime()) / 1000;
+
+
                     if (age < 30) {
                         debug('Adding new message: ' + msg.id);
                         addMessage(msg);
@@ -1070,8 +1281,8 @@
         group.className = `msg-group ${isOut ? 'out' : 'in'}`;
         group.id = `msg-${msg.id}`;
         
-        const secondsLeft = msg.seconds_left || 30;
-        const time = new Date(msg.created_at);
+        const secondsLeft = msg.secondsleft || 30;
+        const time = new Date(msg.createdat);
         const timeStr = time.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
         
         let color = 'var(--accent)';
@@ -1079,7 +1290,9 @@
         if (secondsLeft < 5) color = 'var(--danger)';
         
         group.innerHTML = `
-            <div class="msg-sender-label">${isOut ? 'You' : escapeHtml(msg.sender_name)}</div>
+            <div class="msg-sender-label">
+              ${isOut ? 'You' : escapeHtml(msg.sendername || 'Unknown')}
+            </div>
             <div class="msg-bubble">
                 ${escapeHtml(msg.text)}
                 <div class="timer-bar-wrap">
@@ -1142,7 +1355,7 @@
     }
 
     function updateMessageCountdown(msg) {
-        const secondsLeft = msg.seconds_left || 30;
+        const secondsLeft = msg.secondsleft || 30;
         const countdownEl = document.getElementById(`count-${msg.id}`);
         const barEl = document.getElementById(`bar-${msg.id}`);
         
@@ -1168,42 +1381,31 @@
     }
 
     function sendMessage() {
-        const input = document.getElementById('messageInput');
-        const text = input.value.trim();
-        if (!text || !currentChatId) {
-            debug('Cannot send: no text or no chat');
-            return;
-        }
-        
-        debug('Sending message to chat: ' + currentChatId);
-        input.value = '';
-        
-        fetch('/api/chat/send', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            credentials: 'include', // FIX: Include credentials
-            body: JSON.stringify({chat_id: currentChatId, text: text})
-        })
-        .then(r => {
-            if (!r.ok) {
-                debug('ERROR: Failed to send message, status: ' + r.status);
-                if (r.status === 401) {
-                    debug('Session expired, redirecting to login...');
-                    window.location.href = '/auth';
-                }
-                throw new Error('HTTP ' + r.status);
-            }
-            return r.json();
-        })
-        .then(data => {
-            debug('Message sent, id: ' + data.id);
-            // Immediately load messages to show our message
-            loadMessages(currentChatId);
-        })
-        .catch(err => {
-            debug('Error sending message: ' + err);
-            input.value = text; // Restore message on error
-        });
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim();
+      if (!text || !currentChatId) {
+        debug('Cannot send: no text or no chat');
+        return;
+      }
+
+      debug('Sending message to chat', currentChatId);
+      fetch('/api/chat/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ chatid: currentChatId, text })
+      })
+      .then(r => {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(data => {
+        debug('Message sent, id', data.id);
+        loadMessages(currentChatId);
+      })
+      .catch(err => debug('Error sending message', err));
+
+      input.value = '';
     }
 
     function handleKeyPress(e) {
@@ -1238,3 +1440,5 @@
 
 </body>
 </html>
+
+
